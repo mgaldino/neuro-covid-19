@@ -67,6 +67,9 @@ ICSMP$sel_con_avg <- rowMeans(ICSMP[,sel_con]) #self-control trait average
 #Vector with country names based on $ISO
 countries <- names(table(ICSMP$ISO3))
 
+#saving dataset
+saveRDS(ICSMP, file = "Dados/icsmp.rds")
+
 #3. FUNCTIONS FOR GET RELIABILITY VALUES:
 
 #Function for alpha (raw alpha):
