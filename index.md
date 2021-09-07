@@ -35,3 +35,14 @@ Your Pages site will use the layout and styles from the Jekyll theme you have se
 ### Support or Contact
 
 Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+
+### Literature Review
+
+Kossowska, Szwed and Czarnek (2021) argues that the Covid-19 pandemic may have increased political identity salience. Rosenfeld and Tomiyama (2020), on the other hand, found that the pandemic did not change ideology, only atitudes, by making people more socially conservative (cnforming more strongly to traditional gender roles).
+### References
+
+KOSSOWSKA, Małgorzata; SZWED, Paulina; CZARNEK, Gabriela. Ideology shapes trust in scientists and attitudes towards vaccines during the COVID-19 pandemic. 2021.
+
+ROSENFELD, Daniel L.; TOMIYAMA, A. Janet. Can a Pandemic Make People More Socially Conservative? Political Ideology, Gender Roles, and the Case of COVID-19. 2020.
+
+PAVLOVIĆ, Zoran; TODOSIJEVIĆ, Bojan; STANOJEVIĆ, Dragan. Support for the measures in fighting the COVID-19 pandemic: The role of political ideology. Psihologija, v. 54, n. 2, p. 207-222, 2021.
