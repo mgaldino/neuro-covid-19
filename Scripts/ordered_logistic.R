@@ -43,13 +43,13 @@ icsmp_a_m1 %>%
 
 # credit_factor_ordered <- factor(credit_rating, ordered = TRUE, 
 #                                 levels = c("AAA", "AA", "A", "BBB"))
-cumulativemodelfit(ctheory1_1 ~ 1 + political_ideology, data=x)
+cumulativemodelfit(ctheory1_1 ~ 1 + political_ideology, data=icsmp_a_m1)
 # logit
        
 
 # this will take some time
-null_mdl <- brm(ctheory1_1 ~ (1|iso_factor), data=x, family=cumulative("logit"), iter = 4000)
-ideology_mdl <- brm(ctheory1_1 ~ political_ideology + (1|iso_factor), data=x, family=cumulative("logit"),
+null_mdl <- brm(ctheory1_1 ~ (1|iso_factor), data=icsmp_a_m1, family=cumulative("logit"), iter = 4000)
+ideology_mdl <- brm(ctheory1_1 ~ political_ideology + (1|iso_factor), data=icsmp_a_m1, family=cumulative("logit"),
                     iter = 4000)
 
 LOO(null_mdl, ideology_mdl)
