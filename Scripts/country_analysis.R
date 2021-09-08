@@ -57,7 +57,8 @@ conspiracy_country <- icsmp_a_m1 %>%
   summarise(ctheory1_mean = mean(ctheory1, na.rm=T),
             ctheory1_sd = sd(ctheory1, na.rm=T),
             n = length(ctheory1)) %>%
-  mutate(ctheory1_se = ctheory1_sd / sqrt(n))
+  mutate(ctheory1_se = ctheory1_sd / sqrt(n),
+         sd_between = sd(ctheory1_mean))
 
 
 p <- ggplot() +
@@ -93,9 +94,14 @@ N <- nrow(icsmp_a_m1)
 
 ## Bayesian model
 
+#JAGS https://github.com/johnmyleswhite/JAGSExamples/blob/master/bugs/hierarchical/hierarchical_linear.bugs
+
+## likert scale
+## https://medium.com/vertex-intelligence/bayesian-modeling-of-likert-scale-survey-responses-809bbd00c2ca
+
 # vayring intercept, no predictor  yij ∼ N(αj,σ2y), and αj ∼ N(μα,σ2α). 
-M1_stanlmer <- stan_lmer(formula = ctheory1 ~ 1 + (1 | iso3), 
-                         data = icsmp_a_m1,
+M1_stanlmer <- stan_lmer(formula = ctheory1 ~ 1 + political_ideology + (1 | iso3), 
+                         data = icsmp_a_m1, iter = 4000,
                          seed = 349)
 
 # Obtain a summary of priors used
@@ -106,3 +112,25 @@ sd(icsmp_a_m1$ctheory1, na.rm = TRUE)
 
 
 print(M1_stanlmer, digits = 2)
+summary(M1_stanlmer, 
+        pars = c("(Intercept)", "political_ideology", "sigma", "Sigma[iso3:(Intercept),(Intercept)]"),
+        probs = c(0.025, 0.975),
+        digits = 2)
+fixef(M1_stanlmer)
+
+NROW(ranef(M1_stanlmer)$iso3)
+# 25
+
+head(cbind(coef(M1_stanlmer)$iso3[,1], 
+           fixef(M1_stanlmer)[1] + ranef(M1_stanlmer)$iso3))
+
+x11()
+ppp_check_plot <- pp_check(M1_stanlmer, plotfun = "dens_overlay")
+x11() 
+ppp_check_plot 
+
+ggsave(ppp_check_plot, file = "Graficos/ppp_check_plot_normal_varying_intercept.png")
+# PPD <- posterior_linpred(post, newdata = nd,
+#                          transform = TRUE)
+
+# http://mjskay.github.io/tidybayes/articles/tidy-rstanarm.html
