@@ -1,0 +1,199 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+# Análise de dados sobre Conspiração na pandemia de covid-19
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = T)
+```
+
+```{r, results='hide', message=F}
+# loading libraries
+library(here, quietly=T)
+library(dplyr, quietly=T)
+library(tidyr, quietly=T)
+library(ggplot2, quietly=T)
+library(janitor, quietly = T)
+library(arm, quietly=T)
+library(rstanarm, quietly=T)
+library(bayesplot)
+library(MASS)
+
+```
+
+```{r, message = FALSE, include = T}
+here()
+```
+
+# Causas de crença em conspiração
+
+Uma breve revisão da literatura sugere que podemos agrupar os motivos para alguém acreditar em teorias da conspiração em: motivos epistêmicos, motivos existenciais e motivos sociais (Douglas et. al, 2017; Gligorić, 2021), ainda que a distinção entre esses três tipos de motivos não seja 100% clara. Os gráficos (DAGs) abaixo modelam as relações causais sugeridas para os três grupos de motivos:
+
+# Motivos epistêmicos
+
+```{r, echo=FALSE, out.width="100%", fig.align="right"}
+
+knitr::include_graphics("/home/mgaldino/Documentos/Pessoal/Neuroscience/Covid-19/neuro-covid-19/Graficos/epistemic.png")
+```
+ 
+ 
+# Motivos Existenciais
+ ```{r, echo=FALSE, out.width="100%", fig.align="right"}
+knitr::include_graphics("/home/mgaldino/Documentos/Pessoal/Neuroscience/Covid-19/neuro-covid-19/Graficos/existential.png")
+```
+ 
+ 
+# Motivos Sociais
+ ```{r, echo=FALSE, out.width="100%", fig.align="right"}
+knitr::include_graphics("/home/mgaldino/Documentos/Pessoal/Neuroscience/Covid-19/neuro-covid-19/Graficos/social.png")
+```
+ 
+
+```{r, results='hide', message=F}
+# loading libraries
+library(here)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+library(janitor)
+library(tidyr)
+library(readr)
+library(rstanarm)
+library(forcats)
+library(papeR)
+library(sjPlot)
+library(sjmisc)
+here()
+
+```
+
+ traço de narcisimo individual, narcisimo coletivo, pertencimento social
+
+# Importandos dados do Brasil
+```{r,  message=F, root.dir = T}
+
+icsmp <- read_rds(paste(here(), "Dados", "icsmp_v2.rds", sep="/"))
+
+icsmp_br <- icsmp %>%
+  clean_names() %>%
+  dplyr::filter(iso3 == "BRA")
+
+```
+
+Das variáveis mencionadas e que aparecem no gráfico, o estudo sobre a Covid-19 possui algumas delas:
+
+1. Medidas de narcisismo coletivo (cnarg 1, 2 e 3) e individual (narc 1, 2, 3, 4, 5 e 6). A direção de causalidade esperada é: quanto maior o narcismo (coletivo e individual), maior a chance de acreditar em teoria da conspiração (motivos sociais).
+2. Medidas de auto-estima (self_esteem) (motivos sociais)
+3. De pertencimento social (sbelong 1, 2, 3 e 4) (motivo social)
+4. Percepção de risco (motivo epistêmico)
+
+Eu espero também que, em países como o Brasil, que pessoas mais de direita tendam a acreditam na conspiração relacionada à Covid-19. De maneira geral, esperamos que países em que líderes foram negacionistas gerem esse alinhamento ideológico, isto é: ideologia de líder negacionista causa ideologia da pessoa similar a do líder de apoiar conspirações.
+
+Por fim, variáveis demográficas que impactem habilidades cognitivas podem ser relevantes, como educação. Aqui, vamos usar slf_ladder, que é o mais próximo disso, embora também capture status relativo, e status de emprego, employ_status1.
+
+# Processando dados
+
+```{r,  message=F, include = T}
+icsmp_br_analise <- icsmp_br %>%
+  dplyr::select(ctheory1, ctheory2, ctheory3, ctheory4, age, employ_status1, slf_ladder, happy, political_ideology, sex1, sex2, nar_tra_avg, col_nar_avg, soc_bel_avg,
+cnarc1:cnarc3, narc1:narc6, self_esteem, sbelong1, sbelong2, sbelong3, sbelong4 ) %>%
+  mutate(sex1 = factor(sex1, levels = 1:3, labels = c("Male", "Female", "Other")),
+         employ_status1 = factor(employ_status1, levels = 1:6, labels = c("Employed full-time", "Employed part-time",
+                                                          "Unemployed/looking for work", "Student", "Retired", "Other")))
+
+icsmp_br_analise <- icsmp_br_analise %>%
+  drop_na(ctheory1)
+
+```
+
+# Análise Descritiva
+
+Vamos agora fazer uma rápida análise descritiva dos dados, olhando inicialmente apenas o Brasil. Em momento posterior, iremos considerar todos os países.
+
+```{r,  message=F, include = T, warning= F}
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=nar_tra_avg)) + geom_point() + geom_smooth(method= "lm") + geom_jitter() +
+  ylab("Conspiracy Theory 1") + xlab("narcisism_trait")
+
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=col_nar_avg)) + geom_point() + geom_smooth(method= "lm") +
+  geom_jitter() +
+  ylab("Conspiracy Theory 1") + xlab("collective_narcisism")
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=soc_bel_avg)) + geom_point() + geom_smooth(method= "lm") + geom_jitter()
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=political_ideology)) + geom_point() + geom_smooth(method= "lm") + 
+  geom_jitter()  +
+  ylab("Conspiracy Theory 1") + xlab("political ideology")
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=slf_ladder)) + geom_point() + geom_smooth(method= "lm") + 
+  geom_jitter()  +
+  ylab("Conspiracy Theory 1") + xlab("self_ladder")
+
+icsmp_br_analise  %>%
+  ggplot(aes(y=ctheory1, x=self_esteem)) + geom_point() + geom_smooth(method= "lm") + 
+  geom_jitter()  +
+  ylab("Conspiracy Theory 1") + xlab("self_esteem")
+
+```
+
+Como podemos ver pela análise descritiva, há correlação para a maioria das variáveis. A análise de regressão permite avaliar a correlação parcial das variáveis. Inicialmente, estamos analisando com regressão probit ordenada. A escolha pela análise probit ordenada em vez de uma análise de regressão linear é porque, em escalas Likert, como a empregada, análises de regressão linear tendem a produzir distroção na estimativa dos efeitos e redução no poder estatístico Liddell & Liddell (2018).
+
+## rodando regressão
+
+```{r,  message=F, include = T, warning= F}
+
+polrToOrdScale = function( polrObject ) {
+  polrThresh = polrObject$zeta
+  polrSlopes = polrObject$coefficients
+  polrInter = 0.0
+  polrSigma = 1.0
+  K = length(polrThresh) + 1  # K is number of ordinal levels
+  sigmaMult = unname( (K-2)/(polrThresh[K-1]-polrThresh[1]) )
+  inter = unname( 1.5 - ( sigmaMult*polrThresh[1] ) )
+  respThresh = sigmaMult*polrThresh + inter
+  respSigma = sigmaMult*polrSigma
+  respB0 = sigmaMult*polrInter + inter
+  respSlopes = sigmaMult*polrSlopes
+  return( list( sigma=respSigma ,
+                b0=respB0 ,
+                coefficients=respSlopes ,
+                zeta=respThresh ) )
+}
+
+icsmp_br_analise_reg <- icsmp_br_analise %>%
+  mutate(ctheory1 = factor(ctheory1 +1, ordered=T)) #coloca a primeira categoria como 1, para a reparametrização
+
+
+m1 <- bayespolr(ctheory1 ~ nar_tra_avg + col_nar_avg + sex1 + political_ideology + self_esteem + soc_bel_avg + slf_ladder,
+          data = icsmp_br_analise_reg, method = "probit")
+summary(m1)
+
+# reparametrização
+
+m1_reparam <- polrToOrdScale( m1 )
+print(m1_reparam)
+
+
+# source("/home/mgaldino/Documentos/Pessoal/Neuroscience/Covid-19/neuro-covid-19/Scripts/polrToOrdScale.R")
+# reg_probit_reparam <- polrToOrdScale( reg_probit1 )
+# print( reg_probit_reparam )
+# Referências
+```
+
+
+Douglas, K. M., Sutton, R. M., & Cichocka, A. (2017). The psychology of conspiracy theories. Current directions in psychological science, 26(6), 538-542.
+
+Gligorić, V., da Silva, M. M., Eker, S., van Hoek, N., Nieuwenhuijzen, E., Popova, U., & Zeighami, G. (2021). The usual suspects: How psychological motives and thinking styles predict the endorsement of well‐known and COVID‐19 conspiracy beliefs. Applied Cognitive Psychology.
+
+Liddell, T. M., & Kruschke, J. K. (2018). Analyzing ordinal data with metric models: What could possibly go wrong?. Journal of Experimental Social Psychology, 79, 328-348.
